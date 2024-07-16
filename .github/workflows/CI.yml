@@ -23,11 +23,11 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1.10'
           - 'pre'
         os:
           - ubuntu-latest
         arch:
+          - x86
           - x64
     steps:
       - uses: actions/checkout@v4
