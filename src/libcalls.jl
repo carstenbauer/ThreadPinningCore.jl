@@ -11,10 +11,10 @@ end
 
 
 # libuv
-cpumasksize() = @ccall uv_cpumask_size()::Cint
+uv_cpumask_size() = @ccall uv_cpumask_size()::Cint
 
 
 # libc
-getcpuid() = @ccall sched_getcpu()::Cint
+sched_getcpu() = @ccall sched_getcpu()::Cint
 
 end # module

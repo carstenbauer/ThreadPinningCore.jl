@@ -1,3 +1,28 @@
 # ThreadPinningCore
 
 [![Build Status](https://github.com/carstenbauer/ThreadPinningCore.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/carstenbauer/ThreadPinningCore.jl/actions/workflows/CI.yml?query=branch%3Amain)
+
+## Usage
+```julia
+julia> using ThreadPinningCore
+
+julia> getcpuid() # where the calling thread is currently running
+232
+
+julia> ispinned() # single CPU thread affinity?
+false
+
+julia> printaffinity()
+1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
+
+julia> pinthread(4) # pin to the CPU thread with ID 4 ("physical" OS ordering, not logical)
+
+julia> getcpuid()
+4
+
+julia> printaffinity()
+0000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+
+julia> ispinned()
+true
+```

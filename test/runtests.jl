@@ -1,6 +1,25 @@
 using ThreadPinningCore
 using Test
+using Base.Threads: threadid, @threads, nthreads
+
+if nthreads() == 1
+    @warn("Running test suite with a single thread.")
+end
 
 @testset "ThreadPinningCore.jl" begin
-    # Write your tests here.
+    @test ispinned() == false
+    @test getaffinity() isa Vector{<:Integer}
+    mask = getaffinity()
+    @test length(mask) >= Sys.CPU_THREADS
+    @test sum(mask) > 0
+    @test ncputhreads() == Sys.CPU_THREADS
+    @test isnothing(printmask(mask))
+    @test isnothing(printaffinity())
+    @test getcpuid() isa Integer
+    @test getcpuid() >= 0
+
+    @test isnothing(pinthread(0))
+    @test ispinned()
+
+    # TODO: Test tid kwarg
 end
