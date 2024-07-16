@@ -12,7 +12,6 @@ end
     mask = getaffinity()
     @test length(mask) >= Sys.CPU_THREADS
     @test sum(mask) > 0
-    @test ncputhreads() == Sys.CPU_THREADS
     @test isnothing(printmask(mask))
     @test isnothing(printaffinity())
     @test getcpuid() isa Integer
