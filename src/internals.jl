@@ -52,7 +52,7 @@ function pinthread(cpuid::Integer; tid::Integer = threadid())
             throw(ErrorException("Couldn't set the affinity on this system."))
         end
     else
-        uv_thread_setaffinity(mask)
+        uv_thread_setaffinity(c_tid, mask)
     end
     return
 end
@@ -80,10 +80,10 @@ function pinthreads(
     end
     for (i, c) in pairs(cpuids)
         tid = tids[i]
-        @show tid, c
-        fetch(@spawnat tid pinthread(c))
+        # @show tid, c
+        # fetch(@spawnat tid pinthread(c))
         # for VERSION > v"1.11-" we could also use:
-        # pinthread(c; tid)
+        pinthread(c; tid)
     end
     return
 end
