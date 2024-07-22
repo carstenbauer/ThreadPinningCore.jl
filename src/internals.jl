@@ -71,15 +71,8 @@ function pinthreads(
     cpuids::AbstractVector{<:Integer};
     tids::AbstractVector{<:Integer} = threadids(),
 )
-    if length(cpuids) > length(tids)
-        throw(
-            ArgumentError(
-                "More CPU IDs ($(length(cpuids))) than thread IDs ($(length(tids))) given.",
-            ),
-        )
-    end
-    for (i, c) in pairs(cpuids)
-        tid = tids[i]
+    for (i, tid) in enumerate(tids)
+        c = cpuids[i]
         pinthread(c; tid)
     end
     return
