@@ -1,7 +1,7 @@
 name = "ThreadPinningCore"
 uuid = "6f48bc29-05ce-4cc8-baad-4adcba581a18"
 authors = ["Carsten Bauer <crstnbr@gmail.com> and contributors"]
-version = "1.0.0-DEV"
+version = "0.1"
 
 [deps]
 StableTasks = "91464d47-22a1-43fe-8b7f-2d57ee82463f"
