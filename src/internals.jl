@@ -1,7 +1,14 @@
 module Internals
 
 import ThreadPinningCore:
-    getaffinity, pinthread, ispinned, getcpuid, printmask, printaffinity, threadids
+    getaffinity,
+    pinthread,
+    ispinned,
+    getcpuid,
+    printmask,
+    printaffinity,
+    threadids,
+    pinthreads
 
 using StableTasks: @spawnat
 
