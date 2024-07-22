@@ -22,7 +22,7 @@ end
 
     @test isnothing(pinthreads([0]))
 
-    @test ThreadPinningCore.threadids() isa UnitRange{Int64}
+    @test ThreadPinningCore.threadids() isa UnitRange{Int}
 
     # TODO: Test kwargs
 end
