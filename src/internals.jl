@@ -52,7 +52,7 @@ function pinthread(cpuid::Integer; tid::Integer = threadid())
             throw(ErrorException("Couldn't set the affinity on this system."))
         end
     else
-        uv_thread_setaffinity(c_tid, mask)
+        uv_thread_setaffinity(tid, mask)
     end
     return
 end
