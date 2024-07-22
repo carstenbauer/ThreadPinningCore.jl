@@ -1,7 +1,9 @@
-module Implementation
+module Internals
 
 import ThreadPinningCore:
-    getaffinity, pinthread, ispinned, getcpuid, printmask, printaffinity
+    getaffinity, pinthread, ispinned, getcpuid, printmask, printaffinity, threadids
+
+using StableTasks: @spawnat
 
 using ..LibCalls:
     jl_setaffinity,
@@ -10,7 +12,7 @@ using ..LibCalls:
     uv_thread_setaffinity,
     uv_cpumask_size,
     sched_getcpu
-using Base.Threads: threadid
+using Base.Threads: threadid, nthreads
 
 function getaffinity(; tid::Integer = threadid())
     @static if VERSION > v"1.11-"
@@ -45,7 +47,36 @@ function pinthread(cpuid::Integer; tid::Integer = threadid())
     else
         uv_thread_setaffinity(mask)
     end
-    return nothing
+    return
+end
+
+function threadids(; threadpool = :default)
+    if threadpool == :default
+        return nthreads(:interactive) .+ (1:nthreads(:default))
+    elseif threadpool == :interactive
+        return 1:nthreads(:interactive)
+    elseif threadpool == :all
+        return 1:(nthreads(:interactive)+nthreads(:default))
+    end
+end
+
+function pinthreads(
+    cpuids::AbstractVector{<:Integer};
+    tids::AbstractVector{<:Integer} = threadids(),
+)
+    if length(cpuids) > length(tids)
+        throw(
+            ArgumentError(
+                "More CPU IDs ($(length(cpuids))) than thread IDs ($(length(tids))) given.",
+            ),
+        )
+    end
+    for (i, c) in pairs(cpuids)
+        tid = tids[i]
+        pinthread(c; tid)
+        # @spawnat t pinthread(c)
+    end
+    return
 end
 
 ispinned(; tid = threadid()) = sum(getaffinity(; tid)) == 1

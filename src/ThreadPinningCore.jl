@@ -1,9 +1,11 @@
 module ThreadPinningCore
 
+include("utils.jl")
 include("libcalls.jl")
 include("api.jl")
-include("implementation.jl")
+include("internals.jl")
 
-export pinthread, getaffinity, ispinned, getcpuid, printmask, printaffinity, @spawnat
+@public threadids
+export pinthread, pinthreads, ispinned, getaffinity, getcpuid, printmask, printaffinity
 
 end

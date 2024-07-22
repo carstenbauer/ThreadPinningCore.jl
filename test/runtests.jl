@@ -20,5 +20,9 @@ end
     @test isnothing(pinthread(0))
     @test ispinned()
 
-    # TODO: Test tid kwarg
+    @test isnothing(pinthreads([0]))
+
+    @test ThreadPinningCore.threadids() isa UnitRange{Int64}
+
+    # TODO: Test kwargs
 end
