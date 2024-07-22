@@ -80,8 +80,9 @@ function pinthreads(
     end
     for (i, c) in pairs(cpuids)
         tid = tids[i]
-        pinthread(c; tid)
-        # @spawnat t pinthread(c)
+        @spawnat tid pinthread(c)
+        # for VERSION > v"1.11-" we could also use:
+        # pinthread(c; tid)
     end
     return
 end
