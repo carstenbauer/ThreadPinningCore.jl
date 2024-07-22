@@ -80,9 +80,6 @@ function pinthreads(
     end
     for (i, c) in pairs(cpuids)
         tid = tids[i]
-        # @show tid, c
-        # fetch(@spawnat tid pinthread(c))
-        # for VERSION > v"1.11-" we could also use:
         pinthread(c; tid)
     end
     return
