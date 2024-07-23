@@ -6,6 +6,7 @@ import ThreadPinningCore:
     pinthread,
     ispinned,
     getcpuid,
+    getcpuids,
     printmask,
     printaffinity,
     threadids,
@@ -64,6 +65,14 @@ function threadids(; threadpool = :default)
         return 1:Threads.nthreads(:interactive)
     elseif threadpool == :all
         return 1:(Threads.nthreads(:interactive)+Threads.nthreads(:default))
+    else
+        throw(
+            ArgumentError(
+                "Unknown value for `threadpool` keyword argument. " *
+                "Supported values are `:all`, `:default`, and " *
+                "`:interactive`.",
+            ),
+        )
     end
 end
 
@@ -87,6 +96,24 @@ function getcpuid(; threadid::Union{Integer,Nothing} = nothing)
     else
         @fetchfrom threadid sched_getcpu()
     end
+end
+function getcpuids(; threadpool = :default)::Vector{Int}
+    if !(threadpool in (:all, :default, :interactive))
+        throw(
+            ArgumentError(
+                "Unknown value for `threadpool` keyword argument. " *
+                "Supported values are `:all`, `:default`, and " *
+                "`:interactive`.",
+            ),
+        )
+    end
+    tids_pool = ThreadPinningCore.threadids(; threadpool)
+    nt = length(tids_pool)
+    cpuids = zeros(Int, nt)
+    for (i, threadid) in pairs(tids_pool)
+        cpuids[i] = getcpuid(; threadid)
+    end
+    return cpuids
 end
 
 printmask(mask; kwargs...) = printmask(stdout, mask; kwargs...)

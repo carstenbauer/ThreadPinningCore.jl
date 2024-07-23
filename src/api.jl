@@ -14,6 +14,9 @@ function ispinned end
 "Get the id of the CPU thread a thread is currently running on."
 function getcpuid end
 
+"Get the ids of the CPU threads on which the Julia threads are currently running on."
+function getcpuids end
+
 "Print a mask in a compact way."
 function printmask end
 
