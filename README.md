@@ -4,6 +4,10 @@
 
 This package will be a backend of [ThreadPinning.jl](https://github.com/carstenbauer/ThreadPinning.jl). You may use it directly as a more lightweight alternative. Note, however, that you will need to specify the CPU threads - to which the Julia threads should be pinned - by OS indices ("physical" indices).
 
+## Supported operating systems
+
+**Only Linux is fully and officially supported.** However, you can install and load the package (`using ThreadPinningCore`) without any issues on all operating systems. It's only when you call functions that you will see error messages.
+
 ## Usage
 ```julia
 julia> using ThreadPinningCore
