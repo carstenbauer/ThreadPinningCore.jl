@@ -9,7 +9,7 @@ This package will be a backend of [ThreadPinning.jl](https://github.com/carstenb
 **Only Linux is fully and officially supported.** However, you can install and load the package (`using ThreadPinningCore`) without any issues on all operating systems. It's only when you call functions that you will see error messages.
 
 ## Usage
-```julia
+```julia-repl
 julia> using ThreadPinningCore
 
 julia> getcpuid() # where the calling thread is currently running
