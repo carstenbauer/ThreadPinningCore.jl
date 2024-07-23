@@ -1,6 +1,6 @@
 module LibCalls
 
-using StableTasks: @spawnat
+using StableTasks: @fetchfrom
 
 # libjulia
 function jl_getaffinity(tid, mask, cpumasksize)
@@ -36,7 +36,7 @@ function uv_thread_getaffinity()
     return mask
 end
 function uv_thread_getaffinity(tid::Integer)
-    mask = fetch(@spawnat tid uv_thread_getaffinity())
+    mask = @fetchfrom tid uv_thread_getaffinity()
     return mask
 end
 
@@ -56,7 +56,7 @@ function uv_thread_setaffinity(mask::Vector{<:Integer})
     return
 end
 function uv_thread_setaffinity(tid::Integer, mask::Vector{<:Integer})
-    fetch(@spawnat tid uv_thread_setaffinity(mask))
+    @fetchfrom tid uv_thread_setaffinity(mask)
     return
 end
 

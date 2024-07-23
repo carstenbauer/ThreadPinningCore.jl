@@ -1,6 +1,7 @@
 module Internals
 
 import ThreadPinningCore:
+    ThreadPinningCore,
     getaffinity,
     pinthread,
     ispinned,
@@ -10,7 +11,7 @@ import ThreadPinningCore:
     threadids,
     pinthreads
 
-using StableTasks: @spawnat
+using StableTasks: @fetchfrom
 
 using ..LibCalls:
     jl_setaffinity,
@@ -19,25 +20,24 @@ using ..LibCalls:
     uv_thread_setaffinity,
     uv_cpumask_size,
     sched_getcpu
-using Base.Threads: threadid, nthreads
 
-function getaffinity(; tid::Integer = threadid())
+function getaffinity(; threadid::Integer = Threads.threadid())
     @static if VERSION > v"1.11-"
-        c_tid = tid - 1
+        c_threadid = threadid - 1
         masksize = uv_cpumask_size()
         mask = zeros(Cchar, masksize)
-        ret = jl_getaffinity(c_tid, mask, masksize)
+        ret = jl_getaffinity(c_threadid, mask, masksize)
         if !iszero(ret)
             throw(ErrorException("Couldn't query the affinity on this system."))
         end
     else
-        mask = uv_thread_getaffinity(tid)
+        mask = uv_thread_getaffinity(threadid)
     end
     return mask
 end
 
-function pinthread(cpuid::Integer; tid::Integer = threadid())
-    c_tid = tid - 1
+function pinthread(cpuid::Integer; threadid::Integer = Threads.threadid())
+    c_threadid = threadid - 1
     masksize = uv_cpumask_size()
     if !(0 ≤ cpuid ≤ masksize)
         throw(
@@ -47,40 +47,47 @@ function pinthread(cpuid::Integer; tid::Integer = threadid())
     mask = zeros(Cchar, masksize)
     mask[cpuid+1] = 1
     @static if VERSION > v"1.11-"
-        ret = jl_setaffinity(c_tid, mask, masksize)
+        ret = jl_setaffinity(c_threadid, mask, masksize)
         if !iszero(ret)
             throw(ErrorException("Couldn't set the affinity on this system."))
         end
     else
-        uv_thread_setaffinity(tid, mask)
+        uv_thread_setaffinity(threadid, mask)
     end
     return
 end
 
 function threadids(; threadpool = :default)
     if threadpool == :default
-        return nthreads(:interactive) .+ (1:nthreads(:default))
+        return Threads.nthreads(:interactive) .+ (1:Threads.nthreads(:default))
     elseif threadpool == :interactive
-        return 1:nthreads(:interactive)
+        return 1:Threads.nthreads(:interactive)
     elseif threadpool == :all
-        return 1:(nthreads(:interactive)+nthreads(:default))
+        return 1:(Threads.nthreads(:interactive)+Threads.nthreads(:default))
     end
 end
 
 function pinthreads(
     cpuids::AbstractVector{<:Integer};
-    tids::AbstractVector{<:Integer} = threadids(),
+    threadids::AbstractVector{<:Integer} = ThreadPinningCore.threadids(),
 )
-    for (i, tid) in enumerate(tids)
+    limit = min(length(cpuids), length(threadids))
+    for (i, threadid) in enumerate(@view(threadids[1:limit]))
         c = cpuids[i]
-        pinthread(c; tid)
+        pinthread(c; threadid)
     end
     return
 end
 
-ispinned(; tid = threadid()) = sum(getaffinity(; tid)) == 1
+ispinned(; threadid::Integer = Threads.threadid()) = sum(getaffinity(; threadid)) == 1
 
-getcpuid() = sched_getcpu()
+function getcpuid(; threadid::Union{Integer,Nothing} = nothing)
+    if isnothing(threadid)
+        sched_getcpu()
+    else
+        @fetchfrom threadid sched_getcpu()
+    end
+end
 
 printmask(mask; kwargs...) = printmask(stdout, mask; kwargs...)
 function printmask(io, mask; cutoff = Sys.CPU_THREADS)
@@ -90,6 +97,6 @@ function printmask(io, mask; cutoff = Sys.CPU_THREADS)
     print("\n")
 end
 
-printaffinity(; tid = threadid()) = printmask(getaffinity(; tid))
+printaffinity(; threadid::Integer = Threads.threadid()) = printmask(getaffinity(; threadid))
 
 end # module

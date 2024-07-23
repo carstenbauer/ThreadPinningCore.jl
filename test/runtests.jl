@@ -17,6 +17,7 @@ end
         @test isnothing(printaffinity())
         @test getcpuid() isa Integer
         @test getcpuid() >= 0
+        @test getcpuid(; threadid=1) >= 0
 
         @test isnothing(pinthread(0))
         @test ispinned()
