@@ -1,5 +1,10 @@
 # exported
-"Get the thread affinity of a thread."
+"""
+Get the thread affinity of a thread. Returns the affinity mask as a vector of zeros and
+ones.
+By default, the mask is cut off at `Sys.CPU_THREADS`. This can be tuned via the
+`cutoff` keyword argument (`nothing` means no cutoff).
+"""
 function getaffinity end
 
 "Pin a thread to the given CPU thread."

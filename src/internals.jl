@@ -22,7 +22,10 @@ using ..LibCalls:
     uv_cpumask_size,
     sched_getcpu
 
-function getaffinity(; threadid::Integer = Threads.threadid())
+function getaffinity(;
+    threadid::Integer = Threads.threadid(),
+    cutoff::Union{Integer,Nothing} = Sys.CPU_THREADS,
+)
     @static if VERSION > v"1.11-"
         c_threadid = threadid - 1
         masksize = uv_cpumask_size()
@@ -34,7 +37,7 @@ function getaffinity(; threadid::Integer = Threads.threadid())
     else
         mask = uv_thread_getaffinity(threadid)
     end
-    return mask
+    return isnothing(cutoff) ? mask : mask[1:cutoff]
 end
 
 function pinthread(cpuid::Integer; threadid::Integer = Threads.threadid())
