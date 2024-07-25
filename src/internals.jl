@@ -44,7 +44,12 @@ function forget_pin_attempts()
 end
 
 # INITIAL_AFFINITY_MASK handlers
-get_initial_affinity_mask() = INITIAL_AFFINITY_MASK[]
+function get_initial_affinity_mask()
+    if isnothing(INITIAL_AFFINITY_MASK[])
+        set_initial_affinity_mask()
+    end
+    return INITIAL_AFFINITY_MASK[]
+end
 function set_initial_affinity_mask(mask = getaffinity(); force = false)
     if force || is_first_pin_attempt()
         INITIAL_AFFINITY_MASK[] = mask
