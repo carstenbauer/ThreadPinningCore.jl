@@ -2,7 +2,7 @@ using ThreadPinningCore
 using Test
 using Base.Threads: threadid, @threads, nthreads
 
-const Internals = ThreadPinningCore.Internals
+const TPC = ThreadPinningCore
 
 if nthreads() == 1
     @warn("Running test suite with a single thread.")
@@ -10,26 +10,30 @@ end
 
 @static if Sys.islinux()
     @testset "ThreadPinningCore.jl" begin
-        @test ispinned() == false
-        @test getaffinity() isa Vector{<:Integer}
-        mask = getaffinity()
+        @test TPC.ispinned() == false
+        @test TPC.getaffinity() isa Vector{<:Integer}
+        mask = TPC.getaffinity()
         @test length(mask) >= Sys.CPU_THREADS
         @test sum(mask) > 0
-        @test isnothing(printmask(mask))
-        @test isnothing(printaffinity())
-        @test getcpuid() isa Integer
-        @test getcpuid() >= 0
-        @test getcpuid(; threadid=1) >= 0
-        @test getcpuids() isa Vector{Int}
+        @test isnothing(TPC.printmask(mask))
+        @test isnothing(TPC.printaffinity())
+        @test TPC.getcpuid() isa Integer
+        @test TPC.getcpuid() >= 0
+        @test TPC.getcpuid(; threadid = 1) >= 0
+        @test TPC.getcpuids() isa Vector{Int}
 
-        @test Internals.is_first_pin_attempt()
-        @test isnothing(pinthread(0))
-        @test ispinned()
-        @test !Internals.is_first_pin_attempt()
+        @test TPC.Internals.is_first_pin_attempt()
+        @test isnothing(TPC.pinthread(0))
+        @test TPC.ispinned()
+        @test !TPC.Internals.is_first_pin_attempt()
 
-        @test isnothing(pinthreads([0]))
+        @test isnothing(TPC.pinthreads([0]))
 
-        @test ThreadPinningCore.threadids() isa UnitRange{Int}
+        mask = TPC.emptymask()
+        mask[1] = 1
+        @test isnothing(TPC.setaffinity(mask))
+
+        @test TPC.threadids() isa UnitRange{Int}
 
         # TODO: Test kwargs
     end

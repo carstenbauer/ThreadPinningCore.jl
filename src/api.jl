@@ -1,4 +1,13 @@
-# exported
+"""
+Set the affinity of the calling Julia thread to the given CPU-threads.
+"""
+function setaffinity end
+
+"""
+Get an empty mask (to be used as input for [`setaffinity`](@ref)).
+"""
+function emptymask end
+
 """
 Get the thread affinity of a thread. Returns the affinity mask as a vector of zeros and
 ones.
@@ -28,6 +37,5 @@ function printmask end
 "Print the affinity of the calling thread."
 function printaffinity end
 
-# not exported
 "Get the IDs (`threadid()`) of the Julia threads, optionally of a given threadpool."
 function threadids end

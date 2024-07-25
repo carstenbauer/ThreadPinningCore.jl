@@ -6,7 +6,8 @@ include("api.jl")
 include("internals.jl")
 
 @public threadids
-export pinthread,
-    pinthreads, ispinned, getaffinity, getcpuid, getcpuids, printmask, printaffinity
+@public pinthread, pinthreads
+@public getcpuid, getcpuids, ispinned
+@public getaffinity, setaffinity, printaffinity, emptymask, printmask
 
 end

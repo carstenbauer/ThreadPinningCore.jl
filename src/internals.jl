@@ -10,7 +10,9 @@ import ThreadPinningCore:
     printmask,
     printaffinity,
     threadids,
-    pinthreads
+    pinthreads,
+    setaffinity,
+    emptymask
 
 using StableTasks: @fetchfrom
 
@@ -35,6 +37,12 @@ function forget_pin_attempts()
     return
 end
 
+function emptymask()
+    masksize = uv_cpumask_size()
+    mask = zeros(Cchar, masksize)
+    return mask
+end
+
 function getaffinity(;
     threadid::Integer = Threads.threadid(),
     cutoff::Union{Integer,Nothing} = Sys.CPU_THREADS,
@@ -53,17 +61,18 @@ function getaffinity(;
     return isnothing(cutoff) ? mask : mask[1:cutoff]
 end
 
-function pinthread(cpuid::Integer; threadid::Integer = Threads.threadid())
-    c_threadid = threadid - 1
+function setaffinity(mask; threadid::Integer = Threads.threadid())
     masksize = uv_cpumask_size()
-    if !(0 ≤ cpuid ≤ masksize)
+    masklen = length(mask)
+    if masklen > masksize
         throw(
-            ArgumentError("Invalid cpuid. It must hold 0 ≤ cpuid ≤ masksize ($masksize)."),
+            ArgumentError("Given mask is to big. Expected mask of length <= $(masksize)."),
         )
+    elseif masklen < masksize
+        append!(mask, zeros(eltype(mask), masksize - masklen))
     end
+    c_threadid = threadid - 1
     set_not_first_pin_attempt()
-    mask = zeros(Cchar, masksize)
-    mask[cpuid+1] = 1
     @static if VERSION > v"1.11-"
         ret = jl_setaffinity(c_threadid, mask, masksize)
         if !iszero(ret)
@@ -72,6 +81,20 @@ function pinthread(cpuid::Integer; threadid::Integer = Threads.threadid())
     else
         uv_thread_setaffinity(threadid, mask)
     end
+    return
+end
+
+function pinthread(cpuid::Integer; threadid::Integer = Threads.threadid())
+    mask = emptymask()
+    if !(0 ≤ cpuid ≤ length(mask))
+        throw(
+            ArgumentError(
+                "Invalid cpuid. It must hold 0 ≤ cpuid ≤ masksize ($(length(mask)))).",
+            ),
+        )
+    end
+    mask[cpuid+1] = 1
+    setaffinity(mask; threadid)
     return
 end
 
