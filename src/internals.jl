@@ -32,7 +32,7 @@ include("globals.jl")
 # implementations
 function emptymask()
     if isfaking()
-        return zeros(Cchar, Sys.CPU_THREADS)
+        return zeros(Cchar, length(faking_allowed_cpuids()))
     end
     masksize = uv_cpumask_size()
     if masksize < 0
