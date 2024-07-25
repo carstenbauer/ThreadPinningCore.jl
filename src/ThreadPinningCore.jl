@@ -5,6 +5,8 @@ include("libcalls.jl")
 include("api.jl")
 include("internals.jl")
 
+import .Internals: is_first_pin_attempt
+
 @public threadids
 @public pinthread, pinthreads
 @public getcpuid, getcpuids, ispinned
