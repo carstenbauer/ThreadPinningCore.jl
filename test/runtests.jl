@@ -30,6 +30,10 @@ end
 
         @test isnothing(TPC.pinthreads([0]))
 
+        @test isnothing(TPC.unpinthread())
+        @test !TPC.ispinned()
+        @test isnothing(TPC.unpinthreads())
+
         mask = TPC.emptymask()
         mask[1] = 1
         @test isnothing(TPC.setaffinity(mask))

@@ -12,7 +12,9 @@ import ThreadPinningCore:
     threadids,
     pinthreads,
     setaffinity,
-    emptymask
+    emptymask,
+    unpinthread,
+    unpinthreads
 
 using StableTasks: @fetchfrom
 
@@ -179,5 +181,21 @@ function printmask(io, mask; cutoff = Sys.CPU_THREADS)
 end
 
 printaffinity(; threadid::Integer = Threads.threadid()) = printmask(getaffinity(; threadid))
+
+function unpinthread(; threadid::Integer = Threads.threadid())
+    mask = emptymask()
+    fill!(mask, one(eltype(mask)))
+    setaffinity(mask; threadid)
+    return
+end
+
+function unpinthreads(; threadpool::Symbol = :default)
+    mask = emptymask()
+    fill!(mask, one(eltype(mask)))
+    for threadid in threadids(; threadpool)
+        setaffinity(mask; threadid)
+    end
+    return
+end
 
 end # module

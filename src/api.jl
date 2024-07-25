@@ -39,3 +39,15 @@ function printaffinity end
 
 "Get the IDs (`threadid()`) of the Julia threads, optionally of a given threadpool."
 function threadids end
+
+"""
+Unpins the given Julia thread by setting the affinity mask to all unity.
+Afterwards, the OS is free to move the Julia thread from one CPU thread to another.
+"""
+function unpinthread end
+
+"""
+Unpins all Julia threads by setting the affinity mask of all threads to all unity.
+Afterwards, the OS is free to move any Julia thread from one CPU thread to another.
+"""
+function unpinthreads end

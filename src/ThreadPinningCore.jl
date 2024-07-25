@@ -8,7 +8,7 @@ include("internals.jl")
 import .Internals: is_first_pin_attempt, get_initial_affinity_mask
 
 @public threadids
-@public pinthread, pinthreads
+@public pinthread, pinthreads, unpinthread, unpinthreads
 @public getcpuid, getcpuids, ispinned
 @public getaffinity, setaffinity, printaffinity, emptymask, printmask
 
