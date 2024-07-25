@@ -28,6 +28,9 @@ function uv_thread_getaffinity(self_ref, cpumask, masksize = uv_cpumask_size())
 end
 function uv_thread_getaffinity()
     masksize = uv_cpumask_size()
+    if masksize < 0
+        throw(ErrorException("Libuv returned an invalid mask size. Unsupported OS?"))
+    end
     mask = zeros(Cchar, masksize)
     ret = uv_thread_getaffinity(Ref(uv_thread_self()), mask, masksize)
     if ret != 0
