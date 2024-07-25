@@ -16,18 +16,20 @@ import PrecompileTools
 PrecompileTools.@compile_workload begin
     redirect_stdout(Base.DevNull()) do
         threadids()
-        pinthread(0)
-        pinthreads([0])
-        ispinned()
         getcpuid()
         getcpuids()
-        unpinthread()
-        unpinthreads()
-        getaffinity()
-        with_pinthreads([0]) do
-            nothing
+        @static if Sys.islinux()
+            pinthread(0)
+            pinthreads([0])
+            ispinned()
+            unpinthread()
+            unpinthreads()
+            getaffinity()
+            with_pinthreads([0]) do
+                nothing
+            end
+            printaffinity()
         end
-        printaffinity()
     end
     ThreadPinningCore.Internals.globals_reset()
 end
