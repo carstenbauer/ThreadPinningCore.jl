@@ -60,6 +60,9 @@ end
 
 function emptymask()
     masksize = uv_cpumask_size()
+    if masksize < 0
+        throw(ErrorException("Libuv returned an invalid mask size. Unsupported OS?"))
+    end
     mask = zeros(Cchar, masksize)
     return mask
 end
