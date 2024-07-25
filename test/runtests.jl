@@ -26,6 +26,7 @@ end
         @test isnothing(TPC.pinthread(0))
         @test TPC.ispinned()
         @test !TPC.Internals.is_first_pin_attempt()
+        @test !isnothing(TPC.Internals.get_initial_affinity_mask())
 
         @test isnothing(TPC.pinthreads([0]))
 

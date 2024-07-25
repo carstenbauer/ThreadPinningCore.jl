@@ -5,7 +5,7 @@ include("libcalls.jl")
 include("api.jl")
 include("internals.jl")
 
-import .Internals: is_first_pin_attempt
+import .Internals: is_first_pin_attempt, get_initial_affinity_mask
 
 @public threadids
 @public pinthread, pinthreads

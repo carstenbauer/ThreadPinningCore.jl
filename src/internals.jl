@@ -24,9 +24,13 @@ using ..LibCalls:
     uv_cpumask_size,
     sched_getcpu
 
-# global const
+# global constants
+"The affinity mask (of the main Julia thread) before any pinning has happened."
+const INITIAL_AFFINITY_MASK = Ref{Union{Nothing,Vector{Cchar}}}(nothing)
+"Indicates whether we have not called a pinning function (-> `setaffinity`) before."
 const FIRST_PIN = Ref{Bool}(true)
 
+# FIRST_PIN handlers
 is_first_pin_attempt() = FIRST_PIN[]
 function set_not_first_pin_attempt()
     FIRST_PIN[] = false
@@ -34,6 +38,15 @@ function set_not_first_pin_attempt()
 end
 function forget_pin_attempts()
     FIRST_PIN[] = true
+    return
+end
+
+# INITIAL_AFFINITY_MASK handlers
+get_initial_affinity_mask() = INITIAL_AFFINITY_MASK[]
+function set_initial_affinity_mask(mask = getaffinity(); force = false)
+    if force || is_first_pin_attempt()
+        INITIAL_AFFINITY_MASK[] = mask
+    end
     return
 end
 
@@ -62,6 +75,8 @@ function getaffinity(;
 end
 
 function setaffinity(mask; threadid::Integer = Threads.threadid())
+    set_initial_affinity_mask()
+    set_not_first_pin_attempt()
     masksize = uv_cpumask_size()
     masklen = length(mask)
     if masklen > masksize
@@ -72,7 +87,6 @@ function setaffinity(mask; threadid::Integer = Threads.threadid())
         append!(mask, zeros(eltype(mask), masksize - masklen))
     end
     c_threadid = threadid - 1
-    set_not_first_pin_attempt()
     @static if VERSION > v"1.11-"
         ret = jl_setaffinity(c_threadid, mask, masksize)
         if !iszero(ret)
