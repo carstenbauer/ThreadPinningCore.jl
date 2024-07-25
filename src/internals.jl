@@ -22,6 +22,19 @@ using ..LibCalls:
     uv_cpumask_size,
     sched_getcpu
 
+# global const
+const FIRST_PIN = Ref{Bool}(true)
+
+is_first_pin_attempt() = FIRST_PIN[]
+function set_not_first_pin_attempt()
+    FIRST_PIN[] = false
+    return
+end
+function forget_pin_attempts()
+    FIRST_PIN[] = true
+    return
+end
+
 function getaffinity(;
     threadid::Integer = Threads.threadid(),
     cutoff::Union{Integer,Nothing} = Sys.CPU_THREADS,
@@ -48,6 +61,7 @@ function pinthread(cpuid::Integer; threadid::Integer = Threads.threadid())
             ArgumentError("Invalid cpuid. It must hold 0 ≤ cpuid ≤ masksize ($masksize)."),
         )
     end
+    set_not_first_pin_attempt()
     mask = zeros(Cchar, masksize)
     mask[cpuid+1] = 1
     @static if VERSION > v"1.11-"

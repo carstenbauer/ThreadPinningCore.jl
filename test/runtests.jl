@@ -2,6 +2,8 @@ using ThreadPinningCore
 using Test
 using Base.Threads: threadid, @threads, nthreads
 
+const Internals = ThreadPinningCore.Internals
+
 if nthreads() == 1
     @warn("Running test suite with a single thread.")
 end
@@ -20,8 +22,10 @@ end
         @test getcpuid(; threadid=1) >= 0
         @test getcpuids() isa Vector{Int}
 
+        @test Internals.is_first_pin_attempt()
         @test isnothing(pinthread(0))
         @test ispinned()
+        @test !Internals.is_first_pin_attempt()
 
         @test isnothing(pinthreads([0]))
 
