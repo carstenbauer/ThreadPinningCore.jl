@@ -38,6 +38,14 @@ end
         mask[1] = 1
         @test isnothing(TPC.setaffinity(mask))
 
+        TPC.pinthread(1)
+        TPC.with_pinthreads(0:0) do
+            @test TPC.getcpuid() == 0
+        end
+        @test TPC.getcpuid() == 1
+
+        TPC.getcpuids()
+
         @test TPC.threadids() isa UnitRange{Int}
 
         # TODO: Test kwargs

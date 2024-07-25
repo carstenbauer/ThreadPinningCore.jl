@@ -51,3 +51,38 @@ Unpins all Julia threads by setting the affinity mask of all threads to all unit
 Afterwards, the OS is free to move any Julia thread from one CPU thread to another.
 """
 function unpinthreads end
+
+"""
+Runs the function `f` with the specified pinning and restores the previous thread affinities
+afterwards. Typically to be used in combination with do-syntax.
+
+By default (`soft=false`), before the thread affinities are restored, the Julia
+threads will be pinned to the CPU-threads they were running on previously.
+
+**Example**
+```julia
+julia> ThreadPinningCore.getcpuids()
+4-element Vector{Int64}:
+  7
+ 75
+ 63
+  4
+
+julia> ThreadPinningCore.with_pinthreads(0:3) do
+           ThreadPinningCore.getcpuids()
+       end
+4-element Vector{Int64}:
+ 0
+ 1
+ 2
+ 3
+
+julia> ThreadPinningCore.getcpuids()
+4-element Vector{Int64}:
+  7
+ 75
+ 63
+  4
+```
+"""
+function with_pinthreads end

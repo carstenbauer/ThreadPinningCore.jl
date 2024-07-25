@@ -14,7 +14,8 @@ import ThreadPinningCore:
     setaffinity,
     emptymask,
     unpinthread,
-    unpinthreads
+    unpinthreads,
+    with_pinthreads
 
 using StableTasks: @fetchfrom
 
@@ -139,12 +140,21 @@ end
 
 function pinthreads(
     cpuids::AbstractVector{<:Integer};
-    threadids::AbstractVector{<:Integer} = ThreadPinningCore.threadids(),
+    threadpool::Symbol = :default,
+    threadids::AbstractVector{<:Integer} = ThreadPinningCore.threadids(; threadpool),
+    nthreads = nothing,
+    force = true,
 )
-    limit = min(length(cpuids), length(threadids))
+    if !(force || ThreadPinningCore.is_first_pin_attempt())
+        return
+    end
+    if isnothing(nthreads)
+        nthreads = length(threadids)
+    end
+    # TODO: maybe add `periodic` kwarg for PBC as alternative to strict `min` below.
+    limit = min(length(cpuids), nthreads)
     for (i, threadid) in enumerate(@view(threadids[1:limit]))
-        c = cpuids[i]
-        pinthread(c; threadid)
+        pinthread(cpuids[i]; threadid)
     end
     return
 end
@@ -201,6 +211,29 @@ function unpinthreads(; threadpool::Symbol = :default)
         setaffinity(mask; threadid)
     end
     return
+end
+
+function with_pinthreads(
+    f::F,
+    args...;
+    soft = false,
+    threadpool::Symbol = :default,
+    kwargs...,
+) where {F}
+    tids = threadids(; threadpool)
+    masks_prior = [getaffinity(; threadid = i) for i in tids]
+    cpuids_prior = getcpuids()
+    pinthreads(args...; threadpool, kwargs...)
+    local res
+    try
+        res = f()
+    finally
+        soft || pinthreads(cpuids_prior)
+        for (i, threadid) in pairs(tids)
+            setaffinity(masks_prior[i]; threadid)
+        end
+    end
+    return res
 end
 
 end # module
