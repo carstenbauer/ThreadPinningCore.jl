@@ -27,38 +27,13 @@ using ..LibCalls:
     uv_cpumask_size,
     sched_getcpu
 
-# global constants
-"The affinity mask (of the main Julia thread) before any pinning has happened."
-const INITIAL_AFFINITY_MASK = Ref{Union{Nothing,Vector{Cchar}}}(nothing)
-"Indicates whether we have not called a pinning function (-> `setaffinity`) before."
-const FIRST_PIN = Ref{Bool}(true)
+include("globals.jl")
 
-# FIRST_PIN handlers
-is_first_pin_attempt() = FIRST_PIN[]
-function set_not_first_pin_attempt()
-    FIRST_PIN[] = false
-    return
-end
-function forget_pin_attempts()
-    FIRST_PIN[] = true
-    return
-end
-
-# INITIAL_AFFINITY_MASK handlers
-function get_initial_affinity_mask()
-    if isnothing(INITIAL_AFFINITY_MASK[])
-        set_initial_affinity_mask()
-    end
-    return INITIAL_AFFINITY_MASK[]
-end
-function set_initial_affinity_mask(mask = getaffinity(); force = false)
-    if force || is_first_pin_attempt()
-        INITIAL_AFFINITY_MASK[] = mask
-    end
-    return
-end
-
+# implementations
 function emptymask()
+    if isfaking()
+        return zeros(Cchar, Sys.CPU_THREADS)
+    end
     masksize = uv_cpumask_size()
     if masksize < 0
         throw(ErrorException("Libuv returned an invalid mask size. Unsupported OS?"))
@@ -71,6 +46,12 @@ function getaffinity(;
     threadid::Integer = Threads.threadid(),
     cutoff::Union{Integer,Nothing} = Sys.CPU_THREADS,
 )
+    if isfaking()
+        cpuid = faking_getcpuid(; threadid)
+        mask = emptymask()
+        mask[cpuid+1] = 1
+        return isnothing(cutoff) ? mask : mask[1:cutoff]
+    end
     @static if VERSION > v"1.11-"
         c_threadid = threadid - 1
         masksize = uv_cpumask_size()
@@ -88,6 +69,18 @@ end
 function setaffinity(mask; threadid::Integer = Threads.threadid())
     set_initial_affinity_mask()
     set_not_first_pin_attempt()
+    if isfaking()
+        if sum(mask) > 1
+            faking_setispinned(false; threadid)
+            i = rand(findall(isone, mask))
+        else
+            faking_setispinned(true; threadid)
+            i = findfirst(isone, mask)
+        end
+        cpuid = faking_ith_cpuid(i)
+        faking_setcpuid(cpuid; threadid)
+        return
+    end
     masksize = uv_cpumask_size()
     masklen = length(mask)
     if masklen > masksize
@@ -162,9 +155,19 @@ function pinthreads(
     return
 end
 
-ispinned(; threadid::Integer = Threads.threadid()) = sum(getaffinity(; threadid)) == 1
+function ispinned(; threadid::Integer = Threads.threadid())
+    if isfaking()
+        return faking_ispinned(; threadid)
+    end
+    return sum(getaffinity(; threadid)) == 1
+end
 
 function getcpuid(; threadid::Union{Integer,Nothing} = nothing)
+    if isfaking()
+        return faking_getcpuid(;
+            threadid = isnothing(threadid) ? Threads.threadid() : threadid,
+        )
+    end
     if isnothing(threadid)
         sched_getcpu()
     else
