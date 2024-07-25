@@ -8,6 +8,16 @@ const FAKE_THREADS_CPUIDS = Ref{Union{Nothing,Dict{Int,Int}}}(nothing)
 const FAKE_ALLOWED_CPUIDS = Ref{Union{Nothing,Vector{Int}}}(nothing)
 const FAKE_THREADS_ISPINNED = Ref{Union{Nothing,Dict{Int,Bool}}}(nothing)
 
+function globals_reset()
+    INITIAL_AFFINITY_MASK[] = nothing
+    FIRST_PIN[] = true
+    FAKING[] = false
+    FAKE_THREADS_CPUIDS[] = nothing
+    FAKE_ALLOWED_CPUIDS[] = nothing
+    FAKE_THREADS_ISPINNED[] = nothing
+    return
+end
+
 # FIRST_PIN handlers
 is_first_pin_attempt() = FIRST_PIN[]
 function set_not_first_pin_attempt()
