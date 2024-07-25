@@ -16,9 +16,9 @@ import PrecompileTools
 PrecompileTools.@compile_workload begin
     redirect_stdout(Base.DevNull()) do
         threadids()
-        getcpuid()
-        getcpuids()
         @static if Sys.islinux()
+            getcpuid()
+            getcpuids()
             pinthread(0)
             pinthreads([0])
             ispinned()
