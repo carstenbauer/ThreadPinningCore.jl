@@ -12,4 +12,26 @@ import .Internals: is_first_pin_attempt, get_initial_affinity_mask
 @public getcpuid, getcpuids, ispinned
 @public getaffinity, setaffinity, printaffinity, emptymask, printmask
 
+import PrecompileTools
+PrecompileTools.@compile_workload begin
+    redirect_stdout(Base.DevNull()) do
+        threadids()
+        @static if Sys.islinux()
+            getcpuid()
+            getcpuids()
+            pinthread(0)
+            pinthreads([0])
+            ispinned()
+            unpinthread()
+            unpinthreads()
+            getaffinity()
+            with_pinthreads([0]) do
+                nothing
+            end
+            printaffinity()
+        end
+    end
+    ThreadPinningCore.Internals.globals_reset()
+end
+
 end
