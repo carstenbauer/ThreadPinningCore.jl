@@ -2,6 +2,10 @@ module LibCalls
 
 using StableTasks: @fetchfrom
 
+# libc
+sched_getcpu() = @ccall sched_getcpu()::Cint
+
+
 # libjulia
 function jl_getaffinity(tid, mask, cpumasksize)
     ccall(:jl_getaffinity, Int32, (Int16, Ptr{Cchar}, Int32), tid, mask, cpumasksize)
@@ -10,7 +14,6 @@ end
 function jl_setaffinity(tid, mask, cpumasksize)
     ccall(:jl_setaffinity, Int32, (Int16, Ptr{Cchar}, Int32), tid, mask, cpumasksize)
 end
-
 
 
 # libuv
@@ -64,7 +67,45 @@ function uv_thread_setaffinity(tid::Integer, mask::Vector{<:Integer})
 end
 
 
-# libc
-sched_getcpu() = @ccall sched_getcpu()::Cint
+# pthread
+include("libpthread.jl")
+
+
+# openblas
+function openblas_nthreads()
+    Int(@ccall "libopenblas64_.so".openblas_get_num_threads64_()::Cint)
+end
+
+"Sets the thread affinity for the `i`-th OpenBLAS thread. Thread index `i` starts at zero."
+function openblas_setaffinity(i, cpusetsize, cpu_set::Ref{Ccpu_set_t})
+    @ccall "libopenblas64_.so".openblas_setaffinity(
+        i::Cint,
+        cpusetsize::Csize_t,
+        cpu_set::Ptr{Ccpu_set_t},
+    )::Cint
+end
+
+"""
+The input `mask` should be either of the following:
+   * a `BitArray` indicating the mask directly
+   * a vector of cpuids (the mask will be constructed automatically)
+"""
+function openblas_setaffinity(mask; openblasthreadid, juliathreadid = nothing)
+    cpuset = Ccpu_set_t(mask)
+    cpuset_ref = Ref{Ccpu_set_t}(cpuset)
+    if isnothing(juliathreadid)
+        openblas_setaffinity(openblasthreadid - 1, sizeof(cpuset), cpuset_ref)
+    else
+        ret = @fetchfrom juliathreadid openblas_setaffinity(
+            openblasthreadid - 1,
+            sizeof(cpuset),
+            cpuset_ref,
+        )
+    end
+    if ret != 0
+        throw(ErrorException("openblas_setaffinity returned a non-zero error code: $ret"))
+    end
+    return
+end
 
 end # module
