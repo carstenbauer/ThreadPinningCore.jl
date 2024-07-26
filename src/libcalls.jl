@@ -72,13 +72,15 @@ include("libpthread.jl")
 
 
 # openblas
+const libopenblas = Sys.WORD_SIZE == 32 ? "libopenblas_.so" : "libopenblas64_.so"
+
 function openblas_nthreads()
-    Int(@ccall "libopenblas64_.so".openblas_get_num_threads64_()::Cint)
+    Int(@ccall libopenblas.openblas_get_num_threads64_()::Cint)
 end
 
 "Sets the thread affinity for the `i`-th OpenBLAS thread. Thread index `i` starts at zero."
 function openblas_setaffinity(i, cpusetsize, cpu_set::Ref{Ccpu_set_t})
-    @ccall "libopenblas64_.so".openblas_setaffinity(
+    @ccall libopenblas.openblas_setaffinity(
         i::Cint,
         cpusetsize::Csize_t,
         cpu_set::Ptr{Ccpu_set_t},
@@ -87,7 +89,7 @@ end
 
 # Get thread affinity for OpenBLAS threads. `threadid` starts at 0
 function openblas_getaffinity(threadid, cpusetsize, cpu_set::Ref{Ccpu_set_t})
-    @ccall "libopenblas64_.so".openblas_getaffinity(
+    @ccall libopenblas.openblas_getaffinity(
         threadid::Cint,
         cpusetsize::Csize_t,
         cpu_set::Ptr{Ccpu_set_t},

@@ -11,6 +11,8 @@ import ThreadPinningCore:
 
 using ..LibCalls: LibCalls, Ccpu_set_t
 
+# TODO: faking
+
 # querying
 openblas_nthreads() = LibCalls.openblas_nthreads()
 
