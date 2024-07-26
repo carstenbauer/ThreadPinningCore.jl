@@ -72,7 +72,7 @@ include("libpthread.jl")
 
 
 # openblas
-const libopenblas = Sys.WORD_SIZE == 32 ? "libopenblas_.so" : "libopenblas64_.so"
+const libopenblas = Sys.WORD_SIZE == 32 ? "libopenblas.so" : "libopenblas64_.so"
 
 function openblas_nthreads()
     Int(@ccall libopenblas.openblas_get_num_threads64_()::Cint)
