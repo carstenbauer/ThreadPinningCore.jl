@@ -75,7 +75,11 @@ include("libpthread.jl")
 const libopenblas = Sys.WORD_SIZE == 32 ? "libopenblas.so" : "libopenblas64_.so"
 
 function openblas_nthreads()
-    Int(@ccall libopenblas.openblas_get_num_threads64_()::Cint)
+    if Sys.WORD_SIZE == 32
+        Int(@ccall libopenblas.openblas_get_num_threads()::Cint)
+    else
+        Int(@ccall libopenblas.openblas_get_num_threads64_()::Cint)
+    end
 end
 
 "Sets the thread affinity for the `i`-th OpenBLAS thread. Thread index `i` starts at zero."
