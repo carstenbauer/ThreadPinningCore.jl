@@ -100,6 +100,12 @@ function openblas_getcpuid end
 "Get the ids of the CPU threads on which the OpenBLAS threads are currently running on."
 function openblas_getcpuids end
 
+"Print the affinity of an OpenBLAS thread."
+function openblas_printaffinity end
+
+"Print the affinities of all OpenBLAS threads."
+function openblas_printaffinities end
+
 """
 Set the affinity of an OpenBLAS thread (`threadid`) to the given mask.
 

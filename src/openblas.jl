@@ -1,6 +1,14 @@
 import ThreadPinningCore:
-    openblas_nthreads, openblas_getaffinity, openblas_getcpuid, openblas_getcpuids
-import ThreadPinningCore: openblas_setaffinity, openblas_pinthread, openblas_pinthreads
+    openblas_nthreads,
+    openblas_getaffinity,
+    openblas_getcpuid,
+    openblas_getcpuids,
+    openblas_printaffinity,
+    openblas_printaffinities,
+    openblas_setaffinity,
+    openblas_pinthread,
+    openblas_pinthreads
+
 using ..LibCalls: LibCalls, Ccpu_set_t
 
 # querying
@@ -21,6 +29,21 @@ function openblas_getaffinity(; threadid, convert = true, juliathreadid = nothin
         throw(ErrorException("openblas_setaffinity returned a non-zero error code: $ret"))
     end
     return convert ? Base.convert(BitArray, cpuset[]) : cpuset[]
+end
+
+function openblas_printaffinity(; threadid, kwargs...)
+    mask = openblas_getaffinity(; threadid, kwargs...)
+    printmask(mask)
+    return
+end
+
+function openblas_printaffinities(; kwargs...)
+    for threadid in 1:openblas_nthreads()
+        mask = openblas_getaffinity(; threadid, kwargs...)
+        print(rpad("$(threadid):", 5))
+        printmask(mask)
+    end
+    return
 end
 
 function openblas_getcpuid(; threadid, juliathreadid = Threads.threadid())

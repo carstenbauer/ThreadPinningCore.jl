@@ -48,7 +48,7 @@ end
 printmask(mask; kwargs...) = printmask(stdout, mask; kwargs...)
 function printmask(io, mask; cutoff = ncputhreads())
     for i = 1:cutoff
-        print(io, mask[i])
+        print(io, Int(mask[i]))
     end
     print("\n")
 end

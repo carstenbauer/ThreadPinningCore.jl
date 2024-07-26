@@ -65,6 +65,9 @@ end
 
             @test isnothing(TPC.openblas_pinthreads(fill(c, TPC.openblas_nthreads())))
             @test all(==(c), TPC.openblas_getcpuids())
+
+            @test isnothing(TPC.openblas_printaffinity(; threadid=1))
+            @test isnothing(TPC.openblas_printaffinities())
         end
     end
 end
