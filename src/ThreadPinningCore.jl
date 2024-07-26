@@ -1,5 +1,7 @@
 module ThreadPinningCore
 
+function ncputhreads end
+
 include("utils.jl")
 include("libcalls.jl")
 include("api.jl")

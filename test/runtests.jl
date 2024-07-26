@@ -1,6 +1,8 @@
 using ThreadPinningCore
 using Test
 using Base.Threads: threadid, @threads, nthreads
+using LinearAlgebra: BLAS
+BLAS.set_num_threads(4)
 
 const TPC = ThreadPinningCore
 
@@ -49,5 +51,20 @@ end
         @test TPC.threadids() isa UnitRange{Int}
 
         # TODO: Test kwargs
+        # TODO: test faking mode
+
+        @testset "OpenBLAS" begin
+            # not pinned yet
+            @test_throws ErrorException TPC.openblas_getcpuid(; threadid = 1)
+            @test_throws ErrorException TPC.openblas_getcpuids()
+            @test TPC.openblas_nthreads() == BLAS.get_num_threads()
+
+            c = TPC.getcpuid()
+            @test isnothing(TPC.openblas_pinthread(c; threadid=1))
+            @test TPC.openblas_getcpuid(; threadid=1) == c
+
+            @test isnothing(TPC.openblas_pinthreads(fill(c, TPC.openblas_nthreads())))
+            @test all(==(c), TPC.openblas_getcpuids())
+        end
     end
 end

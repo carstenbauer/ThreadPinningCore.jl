@@ -85,27 +85,14 @@ function openblas_setaffinity(i, cpusetsize, cpu_set::Ref{Ccpu_set_t})
     )::Cint
 end
 
-"""
-The input `mask` should be either of the following:
-   * a `BitArray` indicating the mask directly
-   * a vector of cpuids (the mask will be constructed automatically)
-"""
-function openblas_setaffinity(mask; openblasthreadid, juliathreadid = nothing)
-    cpuset = Ccpu_set_t(mask)
-    cpuset_ref = Ref{Ccpu_set_t}(cpuset)
-    if isnothing(juliathreadid)
-        openblas_setaffinity(openblasthreadid - 1, sizeof(cpuset), cpuset_ref)
-    else
-        ret = @fetchfrom juliathreadid openblas_setaffinity(
-            openblasthreadid - 1,
-            sizeof(cpuset),
-            cpuset_ref,
-        )
-    end
-    if ret != 0
-        throw(ErrorException("openblas_setaffinity returned a non-zero error code: $ret"))
-    end
-    return
+# Get thread affinity for OpenBLAS threads. `threadid` starts at 0
+function openblas_getaffinity(threadid, cpusetsize, cpu_set::Ref{Ccpu_set_t})
+    @ccall "libopenblas64_.so".openblas_getaffinity(
+        threadid::Cint,
+        cpusetsize::Csize_t,
+        cpu_set::Ptr{Ccpu_set_t},
+    )::Cint
 end
+
 
 end # module

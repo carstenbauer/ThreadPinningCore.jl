@@ -86,3 +86,35 @@ julia> ThreadPinningCore.getcpuids()
 ```
 """
 function with_pinthreads end
+
+# OpenBLAS
+"Number of OpenBLAS threads."
+function openblas_nthreads end
+
+"Query the affinity of an OpenBLAS thread"
+function openblas_getaffinity end
+
+"Get the id of the CPU thread a thread is currently running the given OpenBLAS thread."
+function openblas_getcpuid end
+
+"Get the ids of the CPU threads on which the OpenBLAS threads are currently running on."
+function openblas_getcpuids end
+
+"""
+Set the affinity of an OpenBLAS thread (`threadid`) to the given mask.
+
+The input `mask` should be either of the following:
+   * a `BitArray` indicating the mask directly
+   * a vector of cpuids (the mask will be constructed automatically)
+"""
+function openblas_setaffinity end
+
+"""
+Pin an OpenBLAS thread to the given CPU ID.
+"""
+function openblas_pinthread end
+
+"""
+Pin OpenBLAS threads to the given CPU IDs.
+"""
+function openblas_pinthreads end

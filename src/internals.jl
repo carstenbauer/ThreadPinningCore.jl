@@ -15,7 +15,8 @@ import ThreadPinningCore:
     emptymask,
     unpinthread,
     unpinthreads,
-    with_pinthreads
+    with_pinthreads,
+    ncputhreads
 
 using StableTasks: @fetchfrom
 
@@ -29,10 +30,12 @@ using ..LibCalls:
 
 include("globals.jl")
 
-# implementations
+# generic
+ncputhreads() = isfaking() ? length(faking_allowed_cpuids()) : Sys.CPU_THREADS
+
 function emptymask()
     if isfaking()
-        return zeros(Cchar, length(faking_allowed_cpuids()))
+        return zeros(Cchar, ncputhreads())
     end
     masksize = uv_cpumask_size()
     if masksize < 0
@@ -42,9 +45,36 @@ function emptymask()
     return mask
 end
 
+printmask(mask; kwargs...) = printmask(stdout, mask; kwargs...)
+function printmask(io, mask; cutoff = ncputhreads())
+    for i = 1:cutoff
+        print(io, mask[i])
+    end
+    print("\n")
+end
+
+# querying
+function threadids(; threadpool = :default)
+    if threadpool == :default
+        return Threads.nthreads(:interactive) .+ (1:Threads.nthreads(:default))
+    elseif threadpool == :interactive
+        return 1:Threads.nthreads(:interactive)
+    elseif threadpool == :all
+        return 1:(Threads.nthreads(:interactive)+Threads.nthreads(:default))
+    else
+        throw(
+            ArgumentError(
+                "Unknown value for `threadpool` keyword argument. " *
+                "Supported values are `:all`, `:default`, and " *
+                "`:interactive`.",
+            ),
+        )
+    end
+end
+
 function getaffinity(;
     threadid::Integer = Threads.threadid(),
-    cutoff::Union{Integer,Nothing} = Sys.CPU_THREADS,
+    cutoff::Union{Integer,Nothing} = ncputhreads(),
 )
     if isfaking()
         cpuid = faking_getcpuid(; threadid)
@@ -66,6 +96,48 @@ function getaffinity(;
     return isnothing(cutoff) ? mask : mask[1:cutoff]
 end
 
+printaffinity(; threadid::Integer = Threads.threadid()) = printmask(getaffinity(; threadid))
+
+function getcpuid(; threadid::Union{Integer,Nothing} = nothing)
+    if isfaking()
+        return faking_getcpuid(;
+            threadid = isnothing(threadid) ? Threads.threadid() : threadid,
+        )
+    end
+    if isnothing(threadid)
+        sched_getcpu()
+    else
+        @fetchfrom threadid sched_getcpu()
+    end
+end
+
+function getcpuids(; threadpool = :default)::Vector{Int}
+    if !(threadpool in (:all, :default, :interactive))
+        throw(
+            ArgumentError(
+                "Unknown value for `threadpool` keyword argument. " *
+                "Supported values are `:all`, `:default`, and " *
+                "`:interactive`.",
+            ),
+        )
+    end
+    tids_pool = ThreadPinningCore.threadids(; threadpool)
+    nt = length(tids_pool)
+    cpuids = zeros(Int, nt)
+    for (i, threadid) in pairs(tids_pool)
+        cpuids[i] = getcpuid(; threadid)
+    end
+    return cpuids
+end
+
+function ispinned(; threadid::Integer = Threads.threadid())
+    if isfaking()
+        return faking_ispinned(; threadid)
+    end
+    return sum(getaffinity(; threadid)) == 1
+end
+
+# pinning
 function setaffinity(mask; threadid::Integer = Threads.threadid())
     set_initial_affinity_mask()
     set_not_first_pin_attempt()
@@ -116,24 +188,6 @@ function pinthread(cpuid::Integer; threadid::Integer = Threads.threadid())
     return
 end
 
-function threadids(; threadpool = :default)
-    if threadpool == :default
-        return Threads.nthreads(:interactive) .+ (1:Threads.nthreads(:default))
-    elseif threadpool == :interactive
-        return 1:Threads.nthreads(:interactive)
-    elseif threadpool == :all
-        return 1:(Threads.nthreads(:interactive)+Threads.nthreads(:default))
-    else
-        throw(
-            ArgumentError(
-                "Unknown value for `threadpool` keyword argument. " *
-                "Supported values are `:all`, `:default`, and " *
-                "`:interactive`.",
-            ),
-        )
-    end
-end
-
 function pinthreads(
     cpuids::AbstractVector{<:Integer};
     threadpool::Symbol = :default,
@@ -154,54 +208,6 @@ function pinthreads(
     end
     return
 end
-
-function ispinned(; threadid::Integer = Threads.threadid())
-    if isfaking()
-        return faking_ispinned(; threadid)
-    end
-    return sum(getaffinity(; threadid)) == 1
-end
-
-function getcpuid(; threadid::Union{Integer,Nothing} = nothing)
-    if isfaking()
-        return faking_getcpuid(;
-            threadid = isnothing(threadid) ? Threads.threadid() : threadid,
-        )
-    end
-    if isnothing(threadid)
-        sched_getcpu()
-    else
-        @fetchfrom threadid sched_getcpu()
-    end
-end
-function getcpuids(; threadpool = :default)::Vector{Int}
-    if !(threadpool in (:all, :default, :interactive))
-        throw(
-            ArgumentError(
-                "Unknown value for `threadpool` keyword argument. " *
-                "Supported values are `:all`, `:default`, and " *
-                "`:interactive`.",
-            ),
-        )
-    end
-    tids_pool = ThreadPinningCore.threadids(; threadpool)
-    nt = length(tids_pool)
-    cpuids = zeros(Int, nt)
-    for (i, threadid) in pairs(tids_pool)
-        cpuids[i] = getcpuid(; threadid)
-    end
-    return cpuids
-end
-
-printmask(mask; kwargs...) = printmask(stdout, mask; kwargs...)
-function printmask(io, mask; cutoff = Sys.CPU_THREADS)
-    for i = 1:cutoff
-        print(io, mask[i])
-    end
-    print("\n")
-end
-
-printaffinity(; threadid::Integer = Threads.threadid()) = printmask(getaffinity(; threadid))
 
 function unpinthread(; threadid::Integer = Threads.threadid())
     mask = emptymask()
@@ -241,5 +247,9 @@ function with_pinthreads(
     end
     return res
 end
+
+# openblas
+include("openblas.jl")
+
 
 end # module

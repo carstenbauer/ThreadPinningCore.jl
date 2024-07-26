@@ -1,3 +1,5 @@
+import ThreadPinningCore: ncputhreads
+
 # ------------ pthread.h ------------
 const libpthread = "libpthread"
 
