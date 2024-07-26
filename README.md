@@ -6,7 +6,7 @@ This package will be a backend of [ThreadPinning.jl](https://github.com/carstenb
 
 ## Supported operating systems
 
-**Only Linux is fully and officially supported.** However, you can install and load the package (`using ThreadPinningCore`) without any issues on all operating systems. It's only when you call functions that you will see error messages.
+**Only Linux is fully and officially supported.** However, you can install and load the package (`using ThreadPinningCore`) without any issues on all operating systems. It's only when you call (most) functions that you will see error messages.
 
 ## Usage
 ```julia-repl
