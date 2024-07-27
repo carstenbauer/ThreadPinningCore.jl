@@ -4,6 +4,13 @@
 
 This package will be a backend of [ThreadPinning.jl](https://github.com/carstenbauer/ThreadPinning.jl). You may use it directly as a more lightweight alternative. Note, however, that you will need to specify the CPU threads - to which the Julia threads should be pinned - by OS indices ("physical" indices).
 
+## Features
+
+* Pin Julia threads (get and set their processor affinity)
+* Pin OpenBLAS threads (get and set their processor affinity)
+* Fake mode (pin threads without actually pinning them, to be used in conjuction with SysInfo.jl's `TestSystem`s)
+* ...
+
 ## Supported operating systems
 
 **Only Linux is fully and officially supported.** However, you can install and load the package (`using ThreadPinningCore`) without any issues on all operating systems. It's only when you call (most) functions that you will see error messages.
@@ -32,10 +39,3 @@ julia> ThreadPinningCore.printaffinity()
 julia> ThreadPinningCore.ispinned()
 true
 ```
-
-## Features
-
-* Pin Julia threads (get and set their processor affinity)
-* Pin OpenBLAS threads (get and set their processor affinity)
-* Fake mode (pin threads without actually pinning them, to be used in conjuction with SysInfo.jl's `TestSystem`s)
-* ...
