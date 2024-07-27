@@ -50,14 +50,15 @@ end
             @test_throws ErrorException TPC.openblas_getcpuid(; threadid = 1)
             @test_throws ErrorException TPC.openblas_getcpuids()
             @test TPC.openblas_nthreads() == BLAS.get_num_threads()
-
             c = TPC.getcpuid()
             @test isnothing(TPC.openblas_pinthread(c; threadid = 1))
             @test TPC.openblas_getcpuid(; threadid = 1) == c
-
+            @test TPC.openblas_ispinned(; threadid = 1)
+            TPC.openblas_unpinthread(; threadid = 1)
+            @test !TPC.openblas_ispinned(; threadid = 1)
+            TPC.openblas_unpinthreads()
             @test isnothing(TPC.openblas_pinthreads(fill(c, TPC.openblas_nthreads())))
             @test all(==(c), TPC.openblas_getcpuids())
-
             @test isnothing(TPC.openblas_printaffinity(; threadid = 1))
             @test isnothing(TPC.openblas_printaffinities())
         end

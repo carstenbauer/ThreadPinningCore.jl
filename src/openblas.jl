@@ -8,11 +8,11 @@ import ThreadPinningCore:
     openblas_printaffinities,
     openblas_setaffinity,
     openblas_pinthread,
-    openblas_pinthreads
+    openblas_pinthreads,
+    openblas_unpinthread,
+    openblas_unpinthreads
 
 using ..LibCalls: LibCalls, Ccpu_set_t
-
-# TODO: faking
 
 # querying
 openblas_nthreads() = LibCalls.openblas_nthreads()
@@ -113,7 +113,7 @@ function openblas_setaffinity(mask; threadid, juliathreadid = nothing)
     cpuset = Ccpu_set_t(mask)
     cpuset_ref = Ref{Ccpu_set_t}(cpuset)
     if isnothing(juliathreadid)
-        LibCalls.openblas_setaffinity(threadid - 1, sizeof(cpuset), cpuset_ref)
+        ret = LibCalls.openblas_setaffinity(threadid - 1, sizeof(cpuset), cpuset_ref)
     else
         ret = @fetchfrom juliathreadid LibCalls.openblas_setaffinity(
             threadid - 1,
@@ -147,6 +147,20 @@ function openblas_pinthreads(
     limit = min(length(cpuids), nthreads)
     for threadid = 1:limit
         openblas_pinthread(cpuids[threadid]; threadid, juliathreadid)
+    end
+    return
+end
+
+function openblas_unpinthread(; threadid::Integer)
+    mask = trues(cpuidlimit())
+    openblas_setaffinity(mask; threadid)
+    return
+end
+
+function openblas_unpinthreads(; threadpool::Symbol = :default)
+    mask = trues(cpuidlimit())
+    for threadid = 1:openblas_nthreads()
+        openblas_setaffinity(mask; threadid)
     end
     return
 end

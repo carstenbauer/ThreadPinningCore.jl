@@ -16,7 +16,7 @@ import .Internals: is_first_pin_attempt, get_initial_affinity_mask
 @public openblas_nthreads, openblas_getaffinity, openblas_setaffinity
 @public openblas_getcpuid, openblas_getcpuids, openblas_ispinned
 @public openblas_printaffinity, openblas_printaffinities
-@public openblas_pinthread, openblas_pinthreads
+@public openblas_pinthread, openblas_pinthreads, openblas_unpinthread, openblas_unpinthreads
 
 import PrecompileTools
 PrecompileTools.@compile_workload begin

@@ -87,6 +87,8 @@ julia> ThreadPinningCore.getcpuids()
 """
 function with_pinthreads end
 
+
+
 # OpenBLAS
 "Number of OpenBLAS threads."
 function openblas_nthreads end
@@ -127,3 +129,15 @@ function openblas_pinthread end
 Pin OpenBLAS threads to the given CPU IDs.
 """
 function openblas_pinthreads end
+
+"""
+Unpins the given OpenBLAS thread by setting the affinity mask to all unity.
+Afterwards, the OS is free to move the OpenBLAS thread from one CPU thread to another.
+"""
+function openblas_unpinthread end
+
+"""
+Unpins all OpenBLAS threads by setting the affinity mask of all threads to all unity.
+Afterwards, the OS is free to move any OpenBLAS thread from one CPU thread to another.
+"""
+function openblas_unpinthreads end
