@@ -8,7 +8,7 @@ This package will be a backend of [ThreadPinning.jl](https://github.com/carstenb
 
 * Pin Julia threads (get and set their processor affinity)
 * Pin OpenBLAS threads (get and set their processor affinity)
-* Fake mode (pin threads without actually pinning them, to be used in conjuction with SysInfo.jl's `TestSystem`s)
+* Fake mode (pin threads without actually pinning them, to be used in conjuction with [SysInfo.jl](https://github.com/carstenbauer/SysInfo.jl)'s `TestSystem`s)
 * ...
 
 ## Supported operating systems
