@@ -32,3 +32,10 @@ julia> ThreadPinningCore.printaffinity()
 julia> ThreadPinningCore.ispinned()
 true
 ```
+
+## Features
+
+* Pin Julia threads (get and set their processor affinity)
+* Pin OpenBLAS threads (get and set their processor affinity)
+* Fake mode (pin threads without actually pinning them, to be used in conjuction with SysInfo.jl's `TestSystem`s)
+* ...
