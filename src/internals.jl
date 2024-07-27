@@ -16,7 +16,7 @@ import ThreadPinningCore:
     unpinthread,
     unpinthreads,
     with_pinthreads,
-    ncputhreads
+    cpuidlimit
 
 using StableTasks: @fetchfrom
 
@@ -31,11 +31,11 @@ using ..LibCalls:
 include("globals.jl")
 
 # generic
-ncputhreads() = isfaking() ? length(faking_allowed_cpuids()) : Sys.CPU_THREADS
+cpuidlimit() = isfaking() ? maximum(faking_allowed_cpuids()) + 1 : Sys.CPU_THREADS
 
 function emptymask()
     if isfaking()
-        return zeros(Cchar, ncputhreads())
+        return zeros(Cchar, cpuidlimit())
     end
     masksize = uv_cpumask_size()
     if masksize < 0
@@ -46,7 +46,7 @@ function emptymask()
 end
 
 printmask(mask; kwargs...) = printmask(stdout, mask; kwargs...)
-function printmask(io, mask; cutoff = ncputhreads())
+function printmask(io, mask; cutoff = cpuidlimit())
     for i = 1:cutoff
         print(io, Int(mask[i]))
     end
@@ -74,7 +74,7 @@ end
 
 function getaffinity(;
     threadid::Integer = Threads.threadid(),
-    cutoff::Union{Integer,Nothing} = ncputhreads(),
+    cutoff::Union{Integer,Nothing} = cpuidlimit(),
 )
     if isfaking()
         cpuid = faking_getcpuid(; threadid)
@@ -149,7 +149,7 @@ function setaffinity(mask; threadid::Integer = Threads.threadid())
             faking_setispinned(true; threadid)
             i = findfirst(isone, mask)
         end
-        cpuid = faking_ith_cpuid(i)
+        cpuid = i - 1
         faking_setcpuid(cpuid; threadid)
         return
     end

@@ -1,4 +1,4 @@
-import ThreadPinningCore: ncputhreads
+import ThreadPinningCore: cpuidlimit
 
 # ------------ pthread.h ------------
 const libpthread = "libpthread"
@@ -11,7 +11,7 @@ struct Ccpu_set_t
 end
 function Base.convert(::Type{BitArray}, cpuset::Ccpu_set_t)
     bitstr = reverse(join(bitstring.(reverse(cpuset.bits))))
-    maskarray = BitArray(b == '0' ? false : true for b in bitstr[1:ncputhreads()])
+    maskarray = BitArray(b == '0' ? false : true for b in bitstr[1:cpuidlimit()])
     # maskarray = reduce(vcat, digits.(cpuset.bits, base=2, pad=64))[1:ncputhreads()]
     return maskarray
 end

@@ -3,6 +3,7 @@ import ThreadPinningCore:
     openblas_getaffinity,
     openblas_getcpuid,
     openblas_getcpuids,
+    openblas_ispinned,
     openblas_printaffinity,
     openblas_printaffinities,
     openblas_setaffinity,
@@ -17,6 +18,13 @@ using ..LibCalls: LibCalls, Ccpu_set_t
 openblas_nthreads() = LibCalls.openblas_nthreads()
 
 function openblas_getaffinity(; threadid, convert = true, juliathreadid = nothing)
+    if isfaking()
+        cpuid = faking_openblas_getcpuid(; threadid)
+        mask = BitArray(undef, length(faking_allowed_cpuids()))
+        fill!(mask, 0)
+        mask[cpuid+1] = 1
+        return convert ? mask : Ccpu_set_t(mask)
+    end
     cpuset = Ref{Ccpu_set_t}()
     if isnothing(juliathreadid)
         ret = LibCalls.openblas_getaffinity(threadid - 1, sizeof(cpuset), cpuset)
@@ -40,7 +48,7 @@ function openblas_printaffinity(; threadid, kwargs...)
 end
 
 function openblas_printaffinities(; kwargs...)
-    for threadid in 1:openblas_nthreads()
+    for threadid = 1:openblas_nthreads()
         mask = openblas_getaffinity(; threadid, kwargs...)
         print(rpad("$(threadid):", 5))
         printmask(mask)
@@ -49,15 +57,20 @@ function openblas_printaffinities(; kwargs...)
 end
 
 function openblas_getcpuid(; threadid, juliathreadid = Threads.threadid())
-    mask = openblas_getaffinity(; threadid, juliathreadid)
-    if sum(mask) == 1 # exactly one bit set
-        return findfirst(mask) - 1
+    if isfaking()
+        if faking_openblas_ispinned(; threadid)
+            return faking_openblas_getcpuid(; threadid)
+        end
     else
-        error(
-            "The affinity mask of OpenBLAS thread $(threadid) includes multiple CPU " *
-            "threads. This likely indicates that this OpenBLAS hasn't been pinned yet.",
-        )
+        mask = openblas_getaffinity(; threadid, juliathreadid)
+        if sum(mask) == 1 # exactly one bit set
+            return findfirst(mask) - 1
+        end
     end
+    error(
+        "The affinity mask of OpenBLAS thread $(threadid) includes multiple CPU " *
+        "threads. This likely indicates that this OpenBLAS hasn't been pinned yet.",
+    )
 end
 
 function openblas_getcpuids(; kwargs...)
@@ -69,8 +82,34 @@ function openblas_getcpuids(; kwargs...)
     return cpuids
 end
 
+function openblas_ispinned(; threadid, juliathreadid = Threads.threadid())
+    if isfaking()
+        return faking_openblas_ispinned(; threadid)
+    end
+    mask = openblas_getaffinity(; threadid, juliathreadid)
+    return sum(mask) == 1 # exactly one bit set
+end
+
+
 # pinning
 function openblas_setaffinity(mask; threadid, juliathreadid = nothing)
+    if isfaking()
+        if mask isa BitArray
+            if sum(mask) > 1
+                faking_openblas_setispinned(false; threadid)
+                i = rand(findall(isone, mask))
+            else
+                faking_openblas_setispinned(true; threadid)
+                i = findfirst(isone, mask)
+            end
+            cpuid = i - 1
+        else
+            cpuid = only(mask)
+            faking_openblas_setispinned(true; threadid)
+        end
+        faking_openblas_setcpuid(cpuid; threadid)
+        return
+    end
     cpuset = Ccpu_set_t(mask)
     cpuset_ref = Ref{Ccpu_set_t}(cpuset)
     if isnothing(juliathreadid)

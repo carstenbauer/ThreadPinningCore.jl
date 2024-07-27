@@ -4,17 +4,21 @@ const INITIAL_AFFINITY_MASK = Ref{Union{Nothing,Vector{Cchar}}}(nothing)
 "Indicates whether we have not called a pinning function (-> `setaffinity`) before."
 const FIRST_PIN = Ref{Bool}(true)
 const FAKING = Ref{Bool}(false)
-const FAKE_THREADS_CPUIDS = Ref{Union{Nothing,Dict{Int,Int}}}(nothing)
 const FAKE_ALLOWED_CPUIDS = Ref{Union{Nothing,Vector{Int}}}(nothing)
+const FAKE_THREADS_CPUIDS = Ref{Union{Nothing,Dict{Int,Int}}}(nothing)
 const FAKE_THREADS_ISPINNED = Ref{Union{Nothing,Dict{Int,Bool}}}(nothing)
+const FAKE_BLASTHREADS_CPUIDS = Ref{Union{Nothing,Dict{Int,Int}}}(nothing)
+const FAKE_BLASTHREADS_ISPINNED = Ref{Union{Nothing,Dict{Int,Bool}}}(nothing)
 
 function globals_reset()
     INITIAL_AFFINITY_MASK[] = nothing
     FIRST_PIN[] = true
     FAKING[] = false
-    FAKE_THREADS_CPUIDS[] = nothing
     FAKE_ALLOWED_CPUIDS[] = nothing
+    FAKE_THREADS_CPUIDS[] = nothing
     FAKE_THREADS_ISPINNED[] = nothing
+    FAKE_BLASTHREADS_CPUIDS[] = nothing
+    FAKE_BLASTHREADS_ISPINNED[] = nothing
     return
 end
 
@@ -53,6 +57,12 @@ function enable_faking(allowed_cpuids::AbstractVector{<:Integer})
         FAKE_THREADS_CPUIDS[][tid] = rand(FAKE_ALLOWED_CPUIDS[])
         FAKE_THREADS_ISPINNED[][tid] = false
     end
+    FAKE_BLASTHREADS_ISPINNED[] = Dict{Int,Bool}()
+    FAKE_BLASTHREADS_CPUIDS[] = Dict{Int,Int}()
+    for tid in 1:openblas_nthreads()
+        FAKE_BLASTHREADS_CPUIDS[][tid] = rand(FAKE_ALLOWED_CPUIDS[])
+        FAKE_BLASTHREADS_ISPINNED[][tid] = false
+    end
     FAKING[] = true
     return
 end
@@ -60,6 +70,8 @@ function disable_faking()
     FAKING[] = false
     FAKE_THREADS_CPUIDS[] = nothing
     FAKE_THREADS_ISPINNED[] = nothing
+    FAKE_BLASTHREADS_CPUIDS[] = nothing
+    FAKE_BLASTHREADS_ISPINNED[] = nothing
     FAKE_ALLOWED_CPUIDS[] = nothing
     return
 end
@@ -75,5 +87,18 @@ faking_ispinned(; threadid::Integer = Threads.threadid()) =
     FAKE_THREADS_ISPINNED[][threadid]
 function faking_setispinned(val::Bool; threadid::Integer = Threads.threadid())
     FAKE_THREADS_ISPINNED[][threadid] = val
+    return
+end
+
+# openblas
+faking_openblas_getcpuid(; threadid::Integer) = FAKE_BLASTHREADS_CPUIDS[][threadid]
+function faking_openblas_setcpuid(cpuid::Integer; threadid::Integer)
+    FAKE_BLASTHREADS_CPUIDS[][threadid] = cpuid
+    return
+end
+faking_openblas_ispinned(; threadid::Integer) =
+    FAKE_BLASTHREADS_ISPINNED[][threadid]
+function faking_openblas_setispinned(val::Bool; threadid::Integer)
+    FAKE_BLASTHREADS_ISPINNED[][threadid] = val
     return
 end

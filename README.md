@@ -43,3 +43,11 @@ true
 ## API
 
 See [api.jl](src/api.jl) and the `@public`/`export` markers in [ThreadPinningCore.jl](https://github.com/carstenbauer/ThreadPinningCore.jl/blob/main/src/ThreadPinningCore.jl).
+
+## Internal (developer) notes
+
+### Fake mode
+
+Noteworthy limitations:
+
+* `setaffinity(mask)`, for a `mask` that highlights more than one CPU-thread, will randomly choose one of the valid CPU-threads and then fake a single-1 affinity mask. Hence, `setaffinity(mask); getaffinity() != mask`.

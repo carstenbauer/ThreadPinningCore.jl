@@ -100,6 +100,9 @@ function openblas_getcpuid end
 "Get the ids of the CPU threads on which the OpenBLAS threads are currently running on."
 function openblas_getcpuids end
 
+"Check if the OpenBLAS thread is pinned to a single CPU thread."
+function openblas_ispinned end
+
 "Print the affinity of an OpenBLAS thread."
 function openblas_printaffinity end
 

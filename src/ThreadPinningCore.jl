@@ -1,6 +1,6 @@
 module ThreadPinningCore
 
-function ncputhreads end
+function cpuidlimit end
 
 include("utils.jl")
 include("libcalls.jl")
@@ -14,7 +14,7 @@ import .Internals: is_first_pin_attempt, get_initial_affinity_mask
 @public getcpuid, getcpuids, ispinned
 @public getaffinity, setaffinity, printaffinity, emptymask, printmask
 @public openblas_nthreads, openblas_getaffinity, openblas_setaffinity
-@public openblas_getcpuid, openblas_getcpuids
+@public openblas_getcpuid, openblas_getcpuids, openblas_ispinned
 @public openblas_printaffinity, openblas_printaffinities
 @public openblas_pinthread, openblas_pinthreads
 
