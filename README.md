@@ -39,3 +39,7 @@ julia> ThreadPinningCore.printaffinity()
 julia> ThreadPinningCore.ispinned()
 true
 ```
+
+## API
+
+See [api.jl](src/api.jl) and the `@public`/`export` markers in [ThreadPinningCore.jl](https://github.com/carstenbauer/ThreadPinningCore.jl/blob/main/src/ThreadPinningCore.jl).
