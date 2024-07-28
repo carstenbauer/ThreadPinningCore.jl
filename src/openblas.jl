@@ -157,7 +157,7 @@ function openblas_unpinthread(; threadid::Integer)
     return
 end
 
-function openblas_unpinthreads(; threadpool::Symbol = :default)
+function openblas_unpinthreads()
     mask = trues(cpuidlimit())
     for threadid = 1:openblas_nthreads()
         openblas_setaffinity(mask; threadid)

@@ -9,14 +9,14 @@ include("internals.jl")
 
 import .Internals: is_first_pin_attempt, get_initial_affinity_mask
 
-@public threadids
-@public pinthread, pinthreads, unpinthread, unpinthreads, with_pinthreads
-@public getcpuid, getcpuids, ispinned
-@public getaffinity, setaffinity, printaffinity, emptymask, printmask
-@public openblas_nthreads, openblas_getaffinity, openblas_setaffinity
-@public openblas_getcpuid, openblas_getcpuids, openblas_ispinned
-@public openblas_printaffinity, openblas_printaffinities
-@public openblas_pinthread, openblas_pinthreads, openblas_unpinthread, openblas_unpinthreads
+export threadids
+export pinthread, pinthreads, unpinthread, unpinthreads, with_pinthreads
+export getcpuid, getcpuids, ispinned
+export getaffinity, setaffinity, printaffinity, emptymask, printmask
+export openblas_nthreads, openblas_getaffinity, openblas_setaffinity
+export openblas_getcpuid, openblas_getcpuids, openblas_ispinned
+export openblas_printaffinity, openblas_printaffinities
+export openblas_pinthread, openblas_pinthreads, openblas_unpinthread, openblas_unpinthreads
 
 import PrecompileTools
 PrecompileTools.@compile_workload begin

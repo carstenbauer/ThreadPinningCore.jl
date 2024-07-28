@@ -19,24 +19,24 @@ This package will be a backend of [ThreadPinning.jl](https://github.com/carstenb
 ```julia-repl
 julia> using ThreadPinningCore
 
-julia> ThreadPinningCore.getcpuid() # where the calling thread is currently running
+julia> getcpuid() # where the calling thread is currently running
 232
 
-julia> ThreadPinningCore.ispinned() # single CPU thread affinity?
+julia> ispinned() # single CPU thread affinity?
 false
 
-julia> ThreadPinningCore.printaffinity()
+julia> printaffinity()
 1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
 
-julia> ThreadPinningCore.pinthread(4) # pin to the CPU thread with ID 4 ("physical" OS ordering, not logical)
+julia> pinthread(4) # pin to the CPU thread with ID 4 ("physical" OS ordering, not logical)
 
-julia> ThreadPinningCore.getcpuid()
+julia> getcpuid()
 4
 
-julia> ThreadPinningCore.printaffinity()
+julia> printaffinity()
 0000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 
-julia> ThreadPinningCore.ispinned()
+julia> ispinned()
 true
 ```
 
