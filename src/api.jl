@@ -37,10 +37,12 @@ function pinthread end
 
 Pin multiple threads to the given list of CPU threads.
 
-The keyword argument `threadpool` indicates the considered thread pool (`:all` for all).
+The keyword argument `threadpool` indicates the considered thread pool.
 Alternatively, one may specify the `threadids` directly. The keyword argument `nthreads`
 serves as a cutoff (`min(length(cpuids), nthreads)`). If `force=false`, threads are only
-pinned if this is the very first pin attempt (otherwise is a no-op).
+pinned if this is the very first pin attempt (otherwise the call is a no-op).
+
+**Note:** Pinning GC threads is only supported on Julia >= 1.11.
 """
 function pinthreads end
 
@@ -85,7 +87,11 @@ function printaffinity end
 """
     threadids(; threadpool = :default)
 
-Get the IDs (`Threads.threadid()`) of the Julia threads in the given threadpool.
+Get the IDs of the Julia threads in the given threadpool.
+
+Beyond `:default` and `:interactive` the `threadpool` keyword argument may be set to
+`:all` (for `:default` + `:interactive` threads) and `:gc` (for GC threads). Note that the
+latter option is only experimental at this point and might change or go away at any point.
 """
 function threadids end
 

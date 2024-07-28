@@ -61,6 +61,10 @@ function threadids(; threadpool = :default)
         return 1:Threads.nthreads(:interactive)
     elseif threadpool == :all
         return 1:(Threads.nthreads(:interactive)+Threads.nthreads(:default))
+    elseif threadpool == :gc
+        # gc threads come after interactive and default threads
+        gc_first_tid = Threads.nthreads(:interactive) + Threads.nthreads(:default) + 1
+        return gc_first_tid:(gc_first_tid+Threads.ngcthreads()-1)
     else
         throw(
             ArgumentError(
@@ -166,6 +170,7 @@ function setaffinity(mask; threadid::Integer = Threads.threadid())
     @static if VERSION > v"1.11-"
         ret = jl_setaffinity(c_threadid, mask, masksize)
         if !iszero(ret)
+            @warn("Error return code", ret)
             throw(ErrorException("Couldn't set the affinity on this system."))
         end
     else
