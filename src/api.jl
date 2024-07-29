@@ -1,7 +1,7 @@
 """
     setaffinity(mask; threadid = Threads.threadid())
 
-Set the affinity of the calling Julia thread to the given CPU-threads.
+Set the affinity of a Julia thread based on the given mask (a vector of ones and zeros).
 """
 function setaffinity end
 
