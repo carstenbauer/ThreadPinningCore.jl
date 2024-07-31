@@ -1,3 +1,5 @@
+using LinearAlgebra: BLAS
+
 # global constants
 "The affinity mask (of the main Julia thread) before any pinning has happened."
 const INITIAL_AFFINITY_MASK = Ref{Union{Nothing,Vector{Cchar}}}(nothing)
@@ -59,7 +61,7 @@ function enable_faking(allowed_cpuids::AbstractVector{<:Integer})
     end
     FAKE_BLASTHREADS_ISPINNED[] = Dict{Int,Bool}()
     FAKE_BLASTHREADS_CPUIDS[] = Dict{Int,Int}()
-    for tid in 1:openblas_nthreads()
+    for tid in 1:BLAS.get_num_threads()
         FAKE_BLASTHREADS_CPUIDS[][tid] = rand(FAKE_ALLOWED_CPUIDS[])
         FAKE_BLASTHREADS_ISPINNED[][tid] = false
     end
