@@ -20,7 +20,7 @@ openblas_nthreads() = LibCalls.openblas_nthreads()
 function openblas_getaffinity(; threadid, convert = true, juliathreadid = nothing)
     if isfaking()
         cpuid = faking_openblas_getcpuid(; threadid)
-        mask = BitArray(undef, length(faking_allowed_cpuids()))
+        mask = BitArray(undef, maximum(faking_allowed_cpuids()) + 1)
         fill!(mask, 0)
         mask[cpuid+1] = 1
         return convert ? mask : Ccpu_set_t(mask)
