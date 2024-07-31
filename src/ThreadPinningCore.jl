@@ -25,16 +25,19 @@ PrecompileTools.@compile_workload begin
         @static if Sys.islinux()
             getcpuid()
             getcpuids()
-            pinthread(0)
-            pinthreads([0])
-            ispinned()
-            unpinthread()
-            unpinthreads()
             getaffinity()
-            with_pinthreads([0]) do
-                nothing
-            end
             printaffinity()
+            ispinned()
+            try
+                pinthread(0)
+                pinthreads([0])
+                unpinthread()
+                unpinthreads()
+                with_pinthreads([0]) do
+                    nothing
+                end
+            catch err
+            end
         end
     end
     ThreadPinningCore.Internals.globals_reset()
