@@ -200,16 +200,15 @@ function pinthreads(
     nthreads = nothing,
     force = true,
 )
-    if !(force || ThreadPinningCore.is_first_pin_attempt())
-        return
-    end
-    if isnothing(nthreads)
-        nthreads = length(threadids)
-    end
-    # TODO: maybe add `periodic` kwarg for PBC as alternative to strict `min` below.
-    limit = min(length(cpuids), nthreads)
-    for (i, threadid) in enumerate(@view(threadids[1:limit]))
-        pinthread(cpuids[i]; threadid)
+    if force || ThreadPinningCore.is_first_pin_attempt()
+        if isnothing(nthreads)
+            nthreads = length(threadids)
+        end
+        # TODO: maybe add `periodic` kwarg for PBC as alternative to strict `min` below.
+        limit = min(length(cpuids), nthreads)
+        for (i, threadid) in enumerate(@view(threadids[1:limit]))
+            pinthread(cpuids[i]; threadid)
+        end
     end
     return
 end
